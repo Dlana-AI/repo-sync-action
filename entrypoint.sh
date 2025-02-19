@@ -10,14 +10,9 @@ DESTINATION_REPO="${1}"  # Format: username/repository
 TARGET_BRANCH="${2}"
 SSH_PRIVATE_KEY="${3}"
 
-# Extract username and repository name
-DESTINATION_USERNAME=$(echo "$DESTINATION_REPO" | cut -d'/' -f1)
-DESTINATION_REPOSITORY=$(echo "$DESTINATION_REPO" | cut -d'/' -f2)
-
 # Setup Git configuration
 git config --global user.name "github-actions[bot]"
 git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
 
 # Setup SSH authentication
 echo "[+] Setting up SSH authentication"
@@ -35,22 +30,25 @@ if ! ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
     exit 1
 fi
 
-# Setup repository URL
-REPO_URL="git@github.com:${DESTINATION_REPO}.git"
-
-
 # Create temporary directory
 TMP_DIR=$(mktemp -d)
 echo "[+] Working directory: $TMP_DIR"
 
-# Clone current repository
-echo "[+] Cloning source repository"
-git clone --mirror "$GITHUB_SERVER/$GITHUB_REPOSITORY.git" "$TMP_DIR/source"
+# Get current repository name from GitHub environment
+SOURCE_REPO="${GITHUB_REPOSITORY:-$(git config --get remote.origin.url | sed 's/.*github.com[:\/]\(.*\)\.git/\1/')}"
+
+# Setup repository URLs using SSH
+SOURCE_URL="git@github.com:${SOURCE_REPO}.git"
+DEST_URL="git@github.com:${DESTINATION_REPO}.git"
+
+# Clone source repository
+echo "[+] Cloning source repository: $SOURCE_REPO"
+git clone --mirror "$SOURCE_URL" "$TMP_DIR/source"
 cd "$TMP_DIR/source"
 
 # Push to destination
 echo "[+] Pushing to destination repository: $DESTINATION_REPO"
-git push --mirror "$REPO_URL"
+git push --mirror "$DEST_URL"
 
 # Cleanup
 rm -rf "$TMP_DIR"
