@@ -17,6 +17,9 @@ inputs:
     description: "Branch to sync to (default: main)"
     required: false
     default: "main"
+  github_token:
+    description: "GitHub token for cloning private repositories"
+    required: true
 runs:
   using: "composite"
   steps:
@@ -25,5 +28,6 @@ runs:
         ${{ github.action_path }}/entrypoint.sh \
           "${{ inputs.destination_repo }}" \
           "${{ inputs.target_branch }}" \
-          "${{ inputs.ssh_private_key }}"
+          "${{ inputs.ssh_private_key }}" \
+          "${{ inputs.github_token }}"
       shell: bash

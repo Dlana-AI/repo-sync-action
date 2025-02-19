@@ -9,10 +9,11 @@ echo "[+] Starting Repository Sync Action"
 DESTINATION_REPO="${1}"  # Format: username/repository
 TARGET_BRANCH="${2}"
 SSH_PRIVATE_KEY="${3}"
+GITHUB_TOKEN="${4}"  # GitHub token for private repos
 
-# Verify GITHUB_TOKEN exists
-if [ -z "${GITHUB_TOKEN:-}" ]; then
-    echo "::error:: GITHUB_TOKEN is required for cloning private repositories"
+# Verify GITHUB_TOKEN
+if [ -z "${GITHUB_TOKEN}" ]; then
+    echo "::error:: GitHub token is required for cloning private repositories"
     exit 1
 fi
 
