@@ -42,7 +42,7 @@ SOURCE_URL="git@github.com:${SOURCE_REPO}.git"
 DEST_URL="git@github.com:${DESTINATION_REPO}.git"
 
 # Clone source repository
-echo "[+] Cloning source repository: $SOURCE_REPO"
+echo "[+] Cloning source repository: $SOURCE_URL"
 git clone --mirror "$SOURCE_URL" "$TMP_DIR/source"
 cd "$TMP_DIR/source"
 
