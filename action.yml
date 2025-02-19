@@ -1,31 +1,25 @@
-name: "Push to Another Repository"
-description: "Push a specific folder to another GitHub repository"
+name: "Repository Sync Action"
+description: "Automatically sync entire repository with another GitHub repository"
 author: "rianllauo"
+
 inputs:
-  source_directory:
-    description: "Directory to push"
-    required: true
   destination_repo:
-    description: "Destination repository"
+    description: "Destination repository in format username/repository"
+    required: true
+  ssh_private_key:
+    description: "SSH private key for repository authentication (should be stored in secrets)"
     required: true
   target_branch:
-    description: "Branch to push to"
-    required: true
-  commit_message:
-    description: "Commit message"
-    required: true
-  github_token:
-    description: "GitHub token for authentication"
-    required: true
+    description: "Branch to sync to (default: main)"
+    required: false
+    default: "main"
 runs:
   using: "composite"
   steps:
     - run: |
         chmod +x ${{ github.action_path }}/entrypoint.sh
         ${{ github.action_path }}/entrypoint.sh \
-          "${{ inputs.source_directory }}" \
           "${{ inputs.destination_repo }}" \
           "${{ inputs.target_branch }}" \
-          "${{ inputs.commit_message }}" \
-          "${{ inputs.github_token }}"
+          "${{ inputs.ssh_private_key }}"
       shell: bash

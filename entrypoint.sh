@@ -3,52 +3,58 @@
 set -e  # Stop execution if any command fails
 set -u  # Treat unset variables as an error
 
-echo "[+] Starting GitHub Action"
-SOURCE_REPOSITORY="${1}"
-DESTINATION_GITHUB_USERNAME="${2}"
-DESTINATION_REPOSITORY_NAME="${3}"
-GITHUB_SERVER="${4}"
-USER_EMAIL="${5}"
-USER_NAME="${6}"
-DESTINATION_REPOSITORY_USERNAME="${7}"
-TARGET_BRANCH="${8}"
-COMMIT_MESSAGE="${9}"
-CREATE_TARGET_BRANCH_IF_NEEDED="${10}"
+echo "[+] Starting Repository Sync Action"
 
-# Default username
-if [ -z "$DESTINATION_REPOSITORY_USERNAME" ]; then
-	DESTINATION_REPOSITORY_USERNAME="$DESTINATION_GITHUB_USERNAME"
+# Parse inputs
+DESTINATION_REPO="${1}"  # Format: username/repository
+TARGET_BRANCH="${2}"
+SSH_PRIVATE_KEY="${3}"
+
+# Extract username and repository name
+DESTINATION_USERNAME=$(echo "$DESTINATION_REPO" | cut -d'/' -f1)
+DESTINATION_REPOSITORY=$(echo "$DESTINATION_REPO" | cut -d'/' -f2)
+
+# Setup Git configuration
+git config --global user.name "github-actions[bot]"
+git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+
+# Setup SSH authentication
+echo "[+] Setting up SSH authentication"
+mkdir -p "$HOME/.ssh"
+echo "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_rsa"
+chmod 600 "$HOME/.ssh/id_rsa"
+
+# Add GitHub to known hosts
+ssh-keyscan -H github.com >> "$HOME/.ssh/known_hosts"
+
+# Test SSH connection
+echo "[+] Testing SSH connection"
+if ! ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+    echo "::error:: SSH authentication failed"
+    exit 1
 fi
 
-if [ -z "$USER_NAME" ]; then
-	USER_NAME="$DESTINATION_GITHUB_USERNAME"
-fi
+# Setup repository URL
+REPO_URL="git@github.com:${DESTINATION_REPO}.git"
 
-# Setup Git authentication (SSH or Token)
-if [ -n "${SSH_DEPLOY_KEY:=}" ]; then
-	echo "[+] Using SSH_DEPLOY_KEY"
 
-	mkdir -p "$HOME/.ssh"
-	DEPLOY_KEY_FILE="$HOME/.ssh/deploy_key"
-	echo "${SSH_DEPLOY_KEY}" > "$DEPLOY_KEY_FILE"
-	chmod 600 "$DEPLOY_KEY_FILE"
+# Create temporary directory
+TMP_DIR=$(mktemp -d)
+echo "[+] Working directory: $TMP_DIR"
 
-	SSH_KNOWN_HOSTS_FILE="$HOME/.ssh/known_hosts"
-	ssh-keyscan -H "$GITHUB_SERVER" > "$SSH_KNOWN_HOSTS_FILE"
+# Clone current repository
+echo "[+] Cloning source repository"
+git clone --mirror "$GITHUB_SERVER/$GITHUB_REPOSITORY.git" "$TMP_DIR/source"
+cd "$TMP_DIR/source"
 
-	export GIT_SSH_COMMAND="ssh -i "$DEPLOY_KEY_FILE" -o UserKnownHostsFile=$SSH_KNOWN_HOSTS_FILE"
-	GIT_CMD_REPOSITORY="git@$GITHUB_SERVER:$DESTINATION_REPOSITORY_USERNAME/$DESTINATION_REPOSITORY_NAME.git"
+# Push to destination
+echo "[+] Pushing to destination repository: $DESTINATION_REPO"
+git push --mirror "$REPO_URL"
 
-elif [ -n "${API_TOKEN_GITHUB:=}" ]; then
-	echo "[+] Using API_TOKEN_GITHUB"
-	GIT_CMD_REPOSITORY="https://$DESTINATION_REPOSITORY_USERNAME:$API_TOKEN_GITHUB@$GITHUB_SERVER/$DESTINATION_REPOSITORY_USERNAME/$DESTINATION_REPOSITORY_NAME.git"
-else
-	echo "::error:: No authentication method provided (API_TOKEN_GITHUB or SSH_DEPLOY_KEY)"
-	exit 1
-fi
-
-# Clone destination repository
-CLONE_DIR=$(mktemp -d)
+# Cleanup
+rm -rf "$TMP_DIR"
+echo "[+] Repository sync completed successfully"
 echo "[+] Cloning destination repository: $DESTINATION_REPOSITORY_NAME"
 
 git config --global user.email "$USER_EMAIL"
