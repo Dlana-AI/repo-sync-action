@@ -16,6 +16,10 @@ on:
   # Optional: Bisa ditrigger manual dari GitHub Actions tab
   workflow_dispatch:
 
+# Add permissions for GITHUB_TOKEN
+permissions:
+  contents: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -28,6 +32,8 @@ jobs:
 
       - name: Sync to Target Repository
         uses: rianllauo/github-actions-auto-push@main  # Sesuaikan dengan username dan branch Anda
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Ditambahkan untuk akses ke private repo
         with:
           destination_repo: 'target-username/target-repo'  # Ganti dengan repo tujuan
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}

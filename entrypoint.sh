@@ -10,11 +10,17 @@ DESTINATION_REPO="${1}"  # Format: username/repository
 TARGET_BRANCH="${2}"
 SSH_PRIVATE_KEY="${3}"
 
+# Verify GITHUB_TOKEN exists
+if [ -z "${GITHUB_TOKEN:-}" ]; then
+    echo "::error:: GITHUB_TOKEN is required for cloning private repositories"
+    exit 1
+fi
+
 # Setup Git configuration
 git config --global user.name "github-actions[bot]"
 git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-# Setup SSH authentication
+# Setup SSH authentication for destination repo
 echo "[+] Setting up SSH authentication"
 mkdir -p "$HOME/.ssh"
 echo "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_rsa"
@@ -35,14 +41,14 @@ TMP_DIR=$(mktemp -d)
 echo "[+] Working directory: $TMP_DIR"
 
 # Get current repository name from GitHub environment
-SOURCE_REPO="${GITHUB_REPOSITORY:-$(git config --get remote.origin.url | sed 's/.*github.com[:\/]\(.*\)\.git/\1/')}"
+SOURCE_REPO="${GITHUB_REPOSITORY:-$(git config --get remote.origin.url | sed 's/.*github.com[:/]\(.*\)\.git/\1/')}"
 
-# Setup repository URLs using SSH
-SOURCE_URL="git@github.com:${SOURCE_REPO}.git"
+# Setup repository URLs (HTTPS for source using token, SSH for destination)
+SOURCE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${SOURCE_REPO}.git"
 DEST_URL="git@github.com:${DESTINATION_REPO}.git"
 
 # Clone source repository
-echo "[+] Cloning source repository: $SOURCE_URL"
+echo "[+] Cloning source repository: $SOURCE_REPO"
 git clone --mirror "$SOURCE_URL" "$TMP_DIR/source"
 cd "$TMP_DIR/source"
 

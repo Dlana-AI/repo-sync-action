@@ -2,6 +2,10 @@ name: "Repository Sync Action"
 description: "Automatically sync entire repository with another GitHub repository"
 author: "rianllauo"
 
+# Add permissions for GITHUB_TOKEN
+permissions:
+  contents: read
+
 inputs:
   destination_repo:
     description: "Destination repository in format username/repository"
