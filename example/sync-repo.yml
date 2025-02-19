@@ -22,6 +22,8 @@ permissions:
 
 jobs:
   sync:
+    # Mencegah workflow berjalan di repository tujuan
+    if: github.repository != 'target-username/target-repo'
     runs-on: ubuntu-latest
     name: Sync Repository
     steps:

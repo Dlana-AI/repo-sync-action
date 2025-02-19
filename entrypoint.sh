@@ -60,21 +60,11 @@ git push --mirror "$DEST_URL"
 # Cleanup
 rm -rf "$TMP_DIR"
 echo "[+] Repository sync completed successfully"
-echo "[+] Cloning destination repository: $DESTINATION_REPOSITORY_NAME"
-
-git config --global user.email "$USER_EMAIL"
-git config --global user.name "$USER_NAME"
-
-{
-	git clone --depth 1 --branch "$TARGET_BRANCH" "$GIT_CMD_REPOSITORY" "$CLONE_DIR"
-} || {
-	if [ "$CREATE_TARGET_BRANCH_IF_NEEDED" = "true" ]; then
 		git clone --depth 1 "$GIT_CMD_REPOSITORY" "$CLONE_DIR"
 	else
 		echo "::error:: Could not clone repository or branch does not exist"
 		exit 1
 	fi
-}
 
 # Copy all contents from source repository
 echo "[+] Copying repository contents"
