@@ -60,30 +60,32 @@ git push --mirror "$DEST_URL"
 # Cleanup
 rm -rf "$TMP_DIR"
 echo "[+] Repository sync completed successfully"
-		git clone --depth 1 "$GIT_CMD_REPOSITORY" "$CLONE_DIR"
-	else
-		echo "::error:: Could not clone repository or branch does not exist"
-		exit 1
-	fi
 
-# Copy all contents from source repository
-echo "[+] Copying repository contents"
-rsync -av --delete --exclude=".git" "$SOURCE_REPOSITORY"/ "$CLONE_DIR"/
 
-cd "$CLONE_DIR"
+# 	git clone --depth 1 "$GIT_CMD_REPOSITORY" "$CLONE_DIR"
+# 	else
+# 		echo "::error:: Could not clone repository or branch does not exist"
+# 		exit 1
+# 	fi
 
-echo "[+] Git status before commit:"
-git status
+# # Copy all contents from source repository
+# echo "[+] Copying repository contents"
+# rsync -av --delete --exclude=".git" "$SOURCE_REPOSITORY"/ "$CLONE_DIR"/
 
-git add .
+# cd "$CLONE_DIR"
 
-# Check if there are changes before committing
-if git diff-index --quiet HEAD; then
-	echo "[+] No changes detected, skipping commit."
-else
-	echo "[+] Committing changes"
-	git commit -m "$COMMIT_MESSAGE"
-	git push "$GIT_CMD_REPOSITORY" "$TARGET_BRANCH"
-fi
+# echo "[+] Git status before commit:"
+# git status
 
-echo "[+] Git push completed successfully."
+# git add .
+
+# # Check if there are changes before committing
+# if git diff-index --quiet HEAD; then
+# 	echo "[+] No changes detected, skipping commit."
+# else
+# 	echo "[+] Committing changes"
+# 	git commit -m "$COMMIT_MESSAGE"
+# 	git push "$GIT_CMD_REPOSITORY" "$TARGET_BRANCH"
+# fi
+
+# echo "[+] Git push completed successfully."
